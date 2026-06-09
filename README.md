@@ -1,5 +1,11 @@
 # loxeye
 
+[![CI](https://github.com/loxlid/loxeye/actions/workflows/ci.yml/badge.svg)](https://github.com/loxlid/loxeye/actions/workflows/ci.yml)
+![Python](https://img.shields.io/badge/python-3.9%2B-blue)
+![Dependencies](https://img.shields.io/badge/dependencies-none-brightgreen)
+![License](https://img.shields.io/badge/license-MIT-green)
+![Tools](https://img.shields.io/badge/tools-55-orange)
+
 A dependency-free **web3 / smart-contract security toolkit**. 55 tools for
 auditing Solidity source, dissecting EVM bytecode, predicting deploy
 addresses, decoding calldata, and inspecting live contracts over JSON-RPC —
