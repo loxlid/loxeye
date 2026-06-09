@@ -13,6 +13,11 @@ from . import crypto_utils as C
 from . import static_analysis as S
 from . import bytecode as B
 from . import onchain as O
+from . import addressing as A
+from . import calldata as CD
+from . import storage as ST
+from . import honeypot as H
+from . import signatures as SIG
 
 
 @dataclass
@@ -187,6 +192,94 @@ def t_read_storage(rpc, addr, slot): return O.RpcClient(rpc).get_storage_at(addr
 def t_allowance(rpc, token, owner, spender):
     v = O.RpcClient(rpc).erc20_allowance(token, owner, spender)
     return {"allowance": v, "class": O.classify_allowance(v)}
+
+
+# ── group: addressing (CREATE / CREATE2 prediction) ─────────────────────────
+@tool("create-address", "addressing", "Predict CREATE deploy address from deployer+nonce")
+def t_create_addr(deployer, nonce): return A.create_address(deployer, int(nonce))
+
+
+@tool("create2-address", "addressing", "Predict CREATE2 address from deployer+salt+initcode")
+def t_create2_addr(deployer, salt, init_code): return A.create2_address(deployer, salt, init_code)
+
+
+@tool("vanity-score", "addressing", "Score how 'vanity' (zero-prefixed/repeating) an address is")
+def t_vanity(addr): return A.vanity_score(addr)
+
+
+# ── group: calldata decoding ────────────────────────────────────────────────
+@tool("decode-calldata", "calldata", "Decode raw calldata into selector + typed args")
+def t_decode_cd(calldata, signature=None): return CD.decode_calldata(calldata, signature)
+
+
+@tool("identify-selector", "calldata", "Look up a 4-byte selector in the built-in signature DB")
+def t_id_sel(selector): return CD.identify_selector(selector)
+
+
+@tool("known-selectors", "calldata", "List the built-in selector dictionary")
+def t_known_sel(): return CD.KNOWN_SELECTORS
+
+
+# ── group: storage / gas ────────────────────────────────────────────────────
+@tool("mapping-slot", "storage", "Storage slot of mapping[key] at base slot")
+def t_map_slot(key, slot): return ST.mapping_slot(key, int(slot))
+
+
+@tool("array-slot", "storage", "Storage slot of dynamic array[index] at base slot")
+def t_arr_slot(slot, index): return ST.dynamic_array_slot(int(slot), int(index))
+
+
+@tool("string-slot", "storage", "Data slot for long string/bytes at a base slot")
+def t_str_slot(slot): return ST.string_bytes_slot(int(slot))
+
+
+@tool("calldata-gas", "storage", "EIP-2028 calldata gas cost (4/zero byte, 16/nonzero)")
+def t_cd_gas(calldata): return ST.calldata_gas(calldata)
+
+
+@tool("estimate-gas", "storage", "Rough static gas estimate from bytecode opcodes")
+def t_est_gas(code): return ST.estimate_bytecode_gas(code)
+
+
+@tool("storage-collision", "storage", "Compare two storage layouts for proxy collision (a|b pipe-separated)")
+def t_collision(layout_a, layout_b):
+    return ST.storage_collision_check(layout_a.split("|"), layout_b.split("|"))
+
+
+# ── group: honeypot / rug analysis ──────────────────────────────────────────
+@tool("scan-token", "honeypot", "Score a token contract for rug/honeypot red flags")
+def t_scan_token(path): return H.scan_token_file(path)
+
+
+@tool("scan-token-src", "honeypot", "Score token source string for rug/honeypot red flags")
+def t_scan_token_src(src): return H.scan_token(src)
+
+
+# ── group: signatures (EIP-191 / 712 / 2098) ────────────────────────────────
+@tool("eth-message-hash", "signatures", "EIP-191 personal_sign hash of a message")
+def t_eth_msg(message): return SIG.eth_message_hash(message)
+
+
+@tool("eip712-domain", "signatures", "EIP-712 domainSeparator (name version chainId contract)")
+def t_domain(name, version, chain_id, contract):
+    return SIG.eip712_domain_separator(name, version, int(chain_id), contract)
+
+
+@tool("eip712-digest", "signatures", "Final EIP-712 digest from domainSeparator + structHash")
+def t_digest(domain_separator, struct_hash):
+    return SIG.eip712_typed_data_hash(domain_separator, struct_hash)
+
+
+@tool("type-hash", "signatures", "keccak of an EIP-712 type string")
+def t_type_hash(type_string): return SIG.type_hash(type_string)
+
+
+@tool("split-sig", "signatures", "Split a 65-byte (or EIP-2098 compact) signature into r,s,v")
+def t_split_sig(sig): return SIG.split_signature(sig)
+
+
+@tool("check-malleability", "signatures", "Detect high-s (malleable) signatures (EIP-2)")
+def t_malleable(sig): return SIG.is_malleable(sig)
 
 
 def groups() -> dict:

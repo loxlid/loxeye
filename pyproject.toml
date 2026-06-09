@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "loxeye"
 version = "0.1.0"
-description = "Dependency-free web3 / smart-contract security toolkit (35 tools)"
+description = "Dependency-free web3 / smart-contract security toolkit (55 tools)"
 readme = "README.md"
 requires-python = ">=3.9"
 license = { text = "MIT" }

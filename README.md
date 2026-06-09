@@ -1,8 +1,9 @@
 # loxeye
 
-A dependency-free **web3 / smart-contract security toolkit**. 35 tools for
-auditing Solidity source, dissecting EVM bytecode, and inspecting live
-contracts over JSON-RPC — all in pure Python, no `pip install` needed.
+A dependency-free **web3 / smart-contract security toolkit**. 55 tools for
+auditing Solidity source, dissecting EVM bytecode, predicting deploy
+addresses, decoding calldata, and inspecting live contracts over JSON-RPC —
+all in pure Python, no `pip install` needed.
 
 Built for the boring-but-critical parts of a security workflow: hashing
 selectors, checksumming addresses, flagging reentrancy and `tx.origin` auth,
@@ -57,6 +58,24 @@ python -m loxeye run is-proxy-code 0x363d3d37...
 python -m loxeye run detect-proxy 0xADDR --rpc https://eth.llamarpc.com
 python -m loxeye run read-owner  0xADDR --rpc https://eth.llamarpc.com
 python -m loxeye run allowance 0xTOKEN 0xOWNER 0xSPENDER --rpc https://eth.llamarpc.com
+
+# deploy-address prediction (CREATE / CREATE2)
+python -m loxeye run create-address 0xDEPLOYER 0          # CREATE at nonce 0
+python -m loxeye run create2-address 0xFACTORY 0xSALT 0xINITCODE
+
+# decode a raw transaction's calldata
+python -m loxeye run decode-calldata 0xa9059cbb000...
+
+# storage-layout math (find where a mapping value lives)
+python -m loxeye run mapping-slot 0xHOLDER 0             # balances[holder] @ slot 0
+python -m loxeye run storage-collision "address owner|uint256 x" "address owner|address y"
+
+# rug / honeypot risk score
+python -m loxeye run scan-token examples/RugToken.sol
+
+# signature hashing + malleability
+python -m loxeye run eth-message-hash "hello world"
+python -m loxeye run check-malleability 0xSIGNATURE
 ```
 
 As a library:
@@ -81,6 +100,18 @@ bytecode.is_likely_proxy("0x363d3d37...")
 - **onchain (10)** — chain-id, block-number, get-code, get-balance,
   is-contract, detect-proxy, read-owner, token-standard, read-storage,
   allowance
+- **addressing (3)** — create-address, create2-address, vanity-score
+  (predict CREATE/CREATE2 deploy addresses, validated against EIP-1014)
+- **calldata (3)** — decode-calldata, identify-selector, known-selectors
+  (decode raw tx input into typed args via a built-in selector DB)
+- **storage (6)** — mapping-slot, array-slot, string-slot, calldata-gas,
+  estimate-gas, storage-collision (Solidity storage-layout math + proxy
+  collision detection)
+- **honeypot (2)** — scan-token, scan-token-src (rug/honeypot risk scoring:
+  hidden mints, blacklists, trading switches, mutable fees)
+- **signatures (6)** — eth-message-hash, eip712-domain, eip712-digest,
+  type-hash, split-sig, check-malleability (EIP-191/712/2098 hashing +
+  high-s malleability detection)
 
 ## Vulnerability detectors
 
