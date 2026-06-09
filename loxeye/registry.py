@@ -100,28 +100,28 @@ def t_list_detectors():
     return [d.__name__.replace("d_", "") for d in S.DETECTORS]
 
 
-def _single_detector(name):
+def _single_detector(func_name):
     def runner(path):
-        target = "d_" + name.replace("-", "_")
-        det = next((d for d in S.DETECTORS if d.__name__ == target), None)
+        det = next((d for d in S.DETECTORS if d.__name__ == func_name), None)
         if det is None:
-            raise ValueError(f"no detector {name!r}")
+            raise ValueError(f"no detector {func_name!r}")
         lines = S._strip_comments(open(path, encoding="utf-8", errors="replace").read())
         return [f.as_dict() for f in det(lines)]
     return runner
 
 
-# expose a few high-value detectors as standalone tools
-for _det, _grp_help in [
-    ("reentrancy", "Detect state-write-after-external-call reentrancy"),
-    ("tx-origin-auth", "Detect tx.origin used for authorization"),
-    ("delegatecall", "Detect delegatecall to external input"),
-    ("selfdestruct", "Detect selfdestruct usage"),
-    ("weak-randomness", "Detect on-chain randomness from block fields"),
-    ("unchecked-call", "Detect unchecked low-level call returns"),
+# expose a few high-value detectors as standalone tools.
+# tuple = (cli-suffix, detector-function-name, help)
+for _det, _fn, _grp_help in [
+    ("reentrancy", "d_reentrancy", "Detect state-write-after-external-call reentrancy"),
+    ("tx-origin-auth", "d_tx_origin", "Detect tx.origin used for authorization"),
+    ("delegatecall", "d_delegatecall", "Detect delegatecall to external input"),
+    ("selfdestruct", "d_selfdestruct", "Detect selfdestruct usage"),
+    ("weak-randomness", "d_weak_randomness", "Detect on-chain randomness from block fields"),
+    ("unchecked-call", "d_low_level_call_unchecked", "Detect unchecked low-level call returns"),
 ]:
     REGISTRY[f"check-{_det}"] = Tool(
-        f"check-{_det}", "static", _grp_help, False, _single_detector(_det))
+        f"check-{_det}", "static", _grp_help, False, _single_detector(_fn))
 
 
 # ── group: bytecode ─────────────────────────────────────────────────────────

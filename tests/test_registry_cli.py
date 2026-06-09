@@ -55,3 +55,27 @@ def test_cli_help_tool(capsys):
     out = capsys.readouterr().out
     assert rc == 0
     assert "scan" in out
+
+
+def test_all_check_detectors_resolve(tmp_path):
+    # every check-* tool must map to a real detector and run without error
+    sol = tmp_path / "v.sol"
+    sol.write_text(
+        "pragma solidity ^0.8.0;\n"
+        "contract C {\n"
+        "  function f() public { require(tx.origin == msg.sender); }\n"
+        "  function g(address t, bytes memory d) public { t.delegatecall(d); }\n"
+        "}\n"
+    )
+    check_tools = [n for n, t in R.REGISTRY.items()
+                   if n.startswith("check-") and t.group == "static"]
+    assert len(check_tools) >= 6
+    for name in check_tools:
+        result = R.REGISTRY[name](str(sol))  # must not raise
+        assert isinstance(result, list)
+
+
+def test_every_offline_tool_invokable():
+    # smoke: non-rpc tools that take no args or simple args resolve cleanly
+    assert R.REGISTRY["known-selectors"]()
+    assert R.REGISTRY["list-detectors"]()
