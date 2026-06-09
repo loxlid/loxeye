@@ -1,0 +1,36 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "loxeye"
+version = "0.1.0"
+description = "Dependency-free web3 / smart-contract security toolkit (35 tools)"
+readme = "README.md"
+requires-python = ">=3.9"
+license = { text = "MIT" }
+authors = [{ name = "loxlid" }]
+keywords = ["ethereum", "evm", "solidity", "security", "audit", "web3", "bytecode"]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Topic :: Security",
+    "Topic :: Software Development :: Disassemblers",
+]
+dependencies = []
+
+[project.urls]
+Homepage = "https://github.com/loxlid/loxeye"
+Repository = "https://github.com/loxlid/loxeye"
+
+[project.scripts]
+loxeye = "loxeye.cli:main"
+
+[project.optional-dependencies]
+dev = ["pytest>=7.0"]
+
+[tool.setuptools.packages.find]
+include = ["loxeye*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
